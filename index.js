@@ -9,6 +9,7 @@ const defaults = {
   check_title: true,
   check_branch: false,
   check_commits: false,
+  check_description: false,
   ignore_case: false,
   require_brackets: true,
 };
@@ -59,6 +60,10 @@ Toolkit.run(
       ? pull_request.head.ref.toLowerCase()
       : pull_request.head.ref;
 
+    const description = config.ignore_case
+      ? (pull_request.body || '').toLowerCase()
+      : (pull_request.body || '');
+
     const projects = config.projects.map((project) => (config.ignore_case ? project.toLowerCase() : project));
     const title_passed = (() => {
       if (config.check_title) {
@@ -76,6 +81,20 @@ Toolkit.run(
       if (config.check_branch) {
         if (!projects.some((project) => head_branch.match(createProjectRegex(project)))) {
           tools.log(`PR branch ${head_branch} does not contain an approved project with format PROJECT-1234 or PROJECT_1234`);
+          return false;
+        }
+      }
+      return true;
+    })();
+
+    const description_passed = (() => {
+      if (config.check_description) {
+        // check the description matches [PROJECT-1234] somewhere
+        const descriptionMatches = projects.some(
+          (project) => description.match(createWrappedProjectRegex(project, config.require_brackets)),
+        );
+        if (!descriptionMatches) {
+          tools.log('PR description does not contain approved project with format [PROJECT-1234]');
           return false;
         }
       }
@@ -103,7 +122,7 @@ Toolkit.run(
       return true;
     })();
 
-    const statuses = [title_passed, branch_passed, commits_passed];
+    const statuses = [title_passed, branch_passed, description_passed, commits_passed];
 
     if (statuses.some((status) => status === false)) {
       tools.exit.failure('PR Linting Failed');
@@ -111,5 +130,14 @@ Toolkit.run(
       tools.exit.success();
     }
   },
-  { event: ['pull_request.opened', 'pull_request.edited', 'pull_request.reopened', 'pull_request.synchronize', 'pull_request.ready_for_review'], secrets: ['GITHUB_TOKEN'] },
+  {
+    event: [
+      'pull_request.opened',
+      'pull_request.edited',
+      'pull_request.reopened',
+      'pull_request.synchronize',
+      'pull_request.ready_for_review',
+    ],
+    secrets: ['GITHUB_TOKEN'],
+  },
 );

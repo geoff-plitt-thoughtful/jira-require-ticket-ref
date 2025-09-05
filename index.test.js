@@ -42,11 +42,12 @@ function configFixture(fileName = 'all.yml') {
   };
 }
 
-function pullRequestOpenedFixture({ title, ref_name }) {
+function pullRequestOpenedFixture({ title, ref_name, body }) {
   return {
     pull_request: {
       number: 1,
       title,
+      body,
       head: {
         ref: ref_name,
       },
@@ -76,6 +77,10 @@ describe('pr-lint-action', () => {
   const bad_title_and_good_branch = { title: 'no ticket in me', ref_name: 'bug/PROJ_1234/a_good_branch' };
   const lower_case_good_title_and_branch = { title: '[proj-1234] a lower case good title', ref_name: 'bug/proj_1234/a_good_lowercase_branch' };
   const no_brackets_title_and_branch = { title: 'PROJ-1234 a good no brackets PR title', ref_name: 'bug/PROJ-1234/a_good_branch' };
+
+  const good_description = 'This PR implements [PROJ-1234] feature description';
+  const bad_description = 'This PR implements some feature without ticket';
+  const no_description = null;
 
   const good_commits = [
     { commit: { message: 'PROJ-1234 Commit 1' } },
@@ -362,6 +367,58 @@ describe('pr-lint-action', () => {
       .reply(200, configFixture('title.yml'));
 
     tools.context.payload = pullRequestOpenedFixture(no_brackets_title_and_branch);
+
+    await action(tools);
+    expect(tools.exit.failure).toHaveBeenCalledWith('PR Linting Failed');
+    expect.assertions(1);
+  });
+
+  it('passes if check_description is true and description matches', async () => {
+    nock('https://api.github.com')
+      .get(/\/repos\/vijaykramesh\/.*/)
+      .query(true)
+      .reply(200, configFixture('description.yml'));
+
+    tools.context.payload = pullRequestOpenedFixture({ ...bad_title_and_branch, body: good_description });
+
+    await action(tools);
+    expect(tools.exit.success).toHaveBeenCalled();
+    expect.assertions(1);
+  });
+
+  it('fails if check_description is true and description does not match', async () => {
+    nock('https://api.github.com')
+      .get(/\/repos\/vijaykramesh\/.*/)
+      .query(true)
+      .reply(200, configFixture('description.yml'));
+
+    tools.context.payload = pullRequestOpenedFixture({ ...bad_title_and_branch, body: bad_description });
+
+    await action(tools);
+    expect(tools.exit.failure).toHaveBeenCalledWith('PR Linting Failed');
+    expect.assertions(1);
+  });
+
+  it('passes if check_description is false and description does not match', async () => {
+    nock('https://api.github.com')
+      .get(/\/repos\/vijaykramesh\/.*/)
+      .query(true)
+      .reply(200, configFixture('none.yml'));
+
+    tools.context.payload = pullRequestOpenedFixture({ ...bad_title_and_branch, body: bad_description });
+
+    await action(tools);
+    expect(tools.exit.success).toHaveBeenCalled();
+    expect.assertions(1);
+  });
+
+  it('fails if check_description is true and description is empty', async () => {
+    nock('https://api.github.com')
+      .get(/\/repos\/vijaykramesh\/.*/)
+      .query(true)
+      .reply(200, configFixture('description.yml'));
+
+    tools.context.payload = pullRequestOpenedFixture({ ...bad_title_and_branch, body: no_description });
 
     await action(tools);
     expect(tools.exit.failure).toHaveBeenCalledWith('PR Linting Failed');

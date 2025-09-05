@@ -4,6 +4,7 @@ A GitHub Action that verifies your pull request contains a reference to a ticket
 
 * The PR title contains `[PROJ-1234]`
 * The branch name contains `PROJ-1234` or `PROJ_1234`
+* The PR description contains `[PROJ-1234]`
 * Each commit contains `[PROJ-1234]`
 
 
@@ -39,6 +40,7 @@ projects: ['PROJ', 'ABC']
 check_title: true
 check_branch: true
 check_commits: true
+check_description: true
 ignore_case: true
 require_brackets: true
 ```

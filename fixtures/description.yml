@@ -1,0 +1,5 @@
+projects: ['PROJ', 'ABC']
+check_title: false
+check_branch: false
+check_description: true
+ignore_case: true
