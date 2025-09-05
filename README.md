@@ -43,6 +43,39 @@ check_commits: true
 check_description: true
 ignore_case: true
 require_brackets: true
+check_logic: 'and'  # 'and' (default) or 'or'
+```
+
+### Configuration Options
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `projects` | `['PROJ']` | Array of allowed project codes (e.g., JIRA project keys) |
+| `check_title` | `true` | Whether to check PR title for ticket reference |
+| `check_branch` | `false` | Whether to check branch name for ticket reference |
+| `check_commits` | `false` | Whether to check all commit messages for ticket reference |
+| `check_description` | `false` | Whether to check PR description for ticket reference |
+| `ignore_case` | `false` | Whether to ignore case when matching project codes |
+| `require_brackets` | `true` | Whether to require brackets around ticket reference (e.g., `[PROJ-123]` vs `PROJ-123`) |
+| `check_logic` | `'and'` | Logic mode: `'and'` (all enabled checks must pass) or `'or'` (at least one enabled check must pass) |
+
+### Logic Modes
+
+**AND Logic (default)**: All enabled checks must pass for the action to succeed.
+```yml
+projects: ['PROJ']
+check_title: true
+check_branch: true
+check_logic: 'and'  # Both title AND branch must contain ticket reference
+```
+
+**OR Logic**: At least one enabled check must pass for the action to succeed.
+```yml
+projects: ['PROJ']
+check_title: true
+check_branch: true
+check_description: true
+check_logic: 'or'  # Either title OR branch OR description must contain ticket reference
 ```
 
 ## Local Development

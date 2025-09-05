@@ -12,6 +12,7 @@ const defaults = {
   check_description: false,
   ignore_case: false,
   require_brackets: true,
+  check_logic: 'and',
 };
 
 function createProjectRegex(project, ignoreCase = false) {
@@ -124,7 +125,19 @@ Toolkit.run(
 
     const statuses = [title_passed, branch_passed, description_passed, commits_passed];
 
-    if (statuses.some((status) => status === false)) {
+    if (config.check_logic === 'or') {
+      const enabledStatuses = [];
+      if (config.check_title) enabledStatuses.push(title_passed);
+      if (config.check_branch) enabledStatuses.push(branch_passed);
+      if (config.check_description) enabledStatuses.push(description_passed);
+      if (config.check_commits) enabledStatuses.push(commits_passed);
+
+      if (enabledStatuses.length === 0 || enabledStatuses.every((status) => status === false)) {
+        tools.exit.failure('PR Linting Failed - no checks passed');
+      } else {
+        tools.exit.success();
+      }
+    } else if (statuses.some((status) => status === false)) {
       tools.exit.failure('PR Linting Failed');
     } else {
       tools.exit.success();

@@ -1,0 +1,6 @@
+projects: ['PROJ', 'ABC']
+check_title: true
+check_branch: true
+check_description: true
+check_logic: 'or'
+ignore_case: true

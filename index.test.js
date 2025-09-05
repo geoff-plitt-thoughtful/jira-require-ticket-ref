@@ -424,4 +424,103 @@ describe('pr-lint-action', () => {
     expect(tools.exit.failure).toHaveBeenCalledWith('PR Linting Failed');
     expect.assertions(1);
   });
+
+  describe('AND logic tests', () => {
+    it('passes with AND logic when all enabled checks pass', async () => {
+      nock('https://api.github.com')
+        .get(/\/repos\/vijaykramesh\/.*/)
+        .query(true)
+        .reply(200, configFixture('and-logic.yml'));
+
+      tools.context.payload = pullRequestOpenedFixture({
+        ...good_title_and_branch,
+        body: good_description,
+      });
+
+      await action(tools);
+      expect(tools.exit.success).toHaveBeenCalled();
+      expect.assertions(1);
+    });
+
+    it('fails with AND logic when any enabled check fails', async () => {
+      nock('https://api.github.com')
+        .get(/\/repos\/vijaykramesh\/.*/)
+        .query(true)
+        .reply(200, configFixture('and-logic.yml'));
+
+      tools.context.payload = pullRequestOpenedFixture({
+        ...good_title_and_bad_branch,
+        body: good_description,
+      });
+
+      await action(tools);
+      expect(tools.exit.failure).toHaveBeenCalledWith('PR Linting Failed');
+      expect.assertions(1);
+    });
+  });
+
+  describe('OR logic tests', () => {
+    it('passes with OR logic when at least one enabled check passes', async () => {
+      nock('https://api.github.com')
+        .get(/\/repos\/vijaykramesh\/.*/)
+        .query(true)
+        .reply(200, configFixture('or-logic.yml'));
+
+      tools.context.payload = pullRequestOpenedFixture({
+        ...good_title_and_bad_branch,
+        body: bad_description,
+      });
+
+      await action(tools);
+      expect(tools.exit.success).toHaveBeenCalled();
+      expect.assertions(1);
+    });
+
+    it('fails with OR logic when all enabled checks fail', async () => {
+      nock('https://api.github.com')
+        .get(/\/repos\/vijaykramesh\/.*/)
+        .query(true)
+        .reply(200, configFixture('or-logic.yml'));
+
+      tools.context.payload = pullRequestOpenedFixture({
+        ...bad_title_and_branch,
+        body: bad_description,
+      });
+
+      await action(tools);
+      expect(tools.exit.failure).toHaveBeenCalledWith('PR Linting Failed - no checks passed');
+      expect.assertions(1);
+    });
+
+    it('passes with OR logic when only title check is enabled and passes', async () => {
+      nock('https://api.github.com')
+        .get(/\/repos\/vijaykramesh\/.*/)
+        .query(true)
+        .reply(200, configFixture('or-logic-title-only.yml'));
+
+      tools.context.payload = pullRequestOpenedFixture(good_title_and_bad_branch);
+
+      await action(tools);
+      expect(tools.exit.success).toHaveBeenCalled();
+      expect.assertions(1);
+    });
+  });
+
+  describe('backwards compatibility tests', () => {
+    it('defaults to AND logic when check_logic is not specified', async () => {
+      nock('https://api.github.com')
+        .get(/\/repos\/vijaykramesh\/.*/)
+        .query(true)
+        .reply(200, configFixture('all.yml')); // all.yml doesn't have check_logic
+
+      tools.context.payload = pullRequestOpenedFixture({
+        ...good_title_and_bad_branch,
+        body: good_description,
+      });
+
+      await action(tools);
+      expect(tools.exit.failure).toHaveBeenCalledWith('PR Linting Failed');
+      expect.assertions(1);
+    });
+  });
 });
