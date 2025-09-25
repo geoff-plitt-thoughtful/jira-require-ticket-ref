@@ -138,20 +138,22 @@ Toolkit.run(
       if (enabledStatuses.length === 0 || enabledStatuses.every((status) => status === false)) {
         const errorMessage = customErrorMessage || 'PR Linting Failed - no checks passed';
         if (customErrorMessage) {
-          tools.log('');
           tools.log(customErrorMessage);
+          tools.exit.failure('PR Linting Failed - no checks passed');
+        } else {
+          tools.exit.failure(errorMessage);
         }
-        tools.exit.failure(errorMessage);
       } else {
         tools.exit.success();
       }
     } else if (statuses.some((status) => status === false)) {
       const errorMessage = customErrorMessage || 'PR Linting Failed';
       if (customErrorMessage) {
-        tools.log('');
         tools.log(customErrorMessage);
+        tools.exit.failure('PR Linting Failed');
+      } else {
+        tools.exit.failure(errorMessage);
       }
-      tools.exit.failure(errorMessage);
     } else {
       tools.exit.success();
     }
