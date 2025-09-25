@@ -19,10 +19,10 @@ LABEL "com.github.actions.icon"="activity"
 LABEL "com.github.actions.color"="white"
 
 # Copy the package.json and package-lock.json
-COPY package*.json yarn.lock ./
+COPY package*.json ./
 
 # Install dependencies
-RUN yarn install --frozen-lockfile
+RUN npm ci
 
 # Copy the rest of your action's code
 COPY . .
