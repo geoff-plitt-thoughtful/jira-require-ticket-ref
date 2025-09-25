@@ -1,8 +1,7 @@
 const { Toolkit } = require('actions-toolkit');
+const core = require('@actions/core');
 
 const getConfig = require('./utils/config');
-
-const CONFIG_FILENAME = 'pr-lint.yml';
 
 const defaults = {
   projects: ['PROJ'],
@@ -48,9 +47,12 @@ Toolkit.run(
       ref: pull_request.head.ref,
     };
 
+    // Get config path from input, default to 'pr-lint.yml' for backwards compatibility
+    const configPath = core.getInput('config_path') || 'pr-lint.yml';
+
     const config = {
       ...defaults,
-      ...(await getConfig(tools.github, CONFIG_FILENAME, repoInfo)),
+      ...(await getConfig(tools.github, configPath, repoInfo)),
     };
 
     const title = config.ignore_case

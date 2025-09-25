@@ -1,5 +1,10 @@
 name: pr-lint-action
 description: A GitHub Action that verifies your pull request contains a reference to a ticket.
+inputs:
+  config_path:
+    description: 'Path to the configuration file relative to .github directory'
+    required: false
+    default: 'pr-lint.yml'
 runs:
   using: docker
   image: Dockerfile
