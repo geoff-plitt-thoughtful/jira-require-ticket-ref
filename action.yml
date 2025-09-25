@@ -5,6 +5,9 @@ inputs:
     description: 'Path to the configuration file relative to .github directory'
     required: false
     default: 'pr-lint.yml'
+  custom_error_message:
+    description: 'Custom error message to show when checks fail'
+    required: false
 runs:
   using: docker
   image: Dockerfile

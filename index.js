@@ -49,6 +49,7 @@ Toolkit.run(
 
     // Get config path from input, default to 'pr-lint.yml' for backwards compatibility
     const configPath = core.getInput('config_path') || 'pr-lint.yml';
+    const customErrorMessage = core.getInput('custom_error_message');
 
     const config = {
       ...defaults,
@@ -135,12 +136,22 @@ Toolkit.run(
       if (config.check_commits) enabledStatuses.push(commits_passed);
 
       if (enabledStatuses.length === 0 || enabledStatuses.every((status) => status === false)) {
-        tools.exit.failure('PR Linting Failed - no checks passed');
+        const errorMessage = customErrorMessage || 'PR Linting Failed - no checks passed';
+        if (customErrorMessage) {
+          tools.log('');
+          tools.log(customErrorMessage);
+        }
+        tools.exit.failure(errorMessage);
       } else {
         tools.exit.success();
       }
     } else if (statuses.some((status) => status === false)) {
-      tools.exit.failure('PR Linting Failed');
+      const errorMessage = customErrorMessage || 'PR Linting Failed';
+      if (customErrorMessage) {
+        tools.log('');
+        tools.log(customErrorMessage);
+      }
+      tools.exit.failure(errorMessage);
     } else {
       tools.exit.success();
     }
